@@ -1,0 +1,31 @@
+name: Sync upstream
+
+# Mantiene este fork al día con PDFCraftTool/pdfcraft y redespliega en Cloudflare Pages.
+on:
+  schedule:
+    - cron: '0 5 * * *'   # diario 05:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Rebase fork on top of upstream
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/PDFCraftTool/pdfcraft.git
+          git fetch upstream
+          git rebase upstream/main
+          git push --force-with-lease origin main
